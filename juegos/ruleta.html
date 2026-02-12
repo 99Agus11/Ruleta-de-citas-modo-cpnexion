@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruleta de Citas - Planes para Hoy</title>
+    
+</head>
+<body>
+    <div class="container">
+        <h1>🎡 Ruleta de Citas</h1>
+        <p class="subtitle">¡Gira la ruleta y descubre tu plan perfecto para hoy!</p>
+        
+        <div class="wheel-container">
+            <canvas id="wheelCanvas" width="500" height="500"></canvas>
+            <button id="spinButton" class="spin-btn">🎲 GIRAR</button>
+        </div>
+        
+        <div id="result" class="result-box">
+            <h2>¡Tu plan para hoy es...</h2>
+            <p id="selectedPlan">Gira la ruleta para empezar</p>
+        </div>
+        
+        <div class="plans-list">
+            <h3>Planes disponibles:</h3>
+            <ul id="plansList"></ul>
+        </div>
+    </div>
+
+    <style>
+        * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    padding: 40px;
+    max-width: 1000px;
+    width: 100%;
+}
+
+h1 {
+    color: #4a5568;
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 2.5em;
+}
+
+.subtitle {
+    text-align: center;
+    color: #718096;
+    margin-bottom: 30px;
+    font-size: 1.1em;
+}
+
+.wheel-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+#wheelCanvas {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    transition: transform 0.1s ease;
+}
+
+.spin-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px 40px;
+    font-size: 1.5em;
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(255,107,107,0.4);
+    transition: all 0.3s ease;
+    font-weight: bold;
+    z-index: 10;
+}
+
+.spin-btn:hover {
+    background: #ff5252;
+    transform: translate(-50%, -50%) scale(1.05);
+    box-shadow: 0 15px 30px rgba(255,107,107,0.5);
+}
+
+.spin-btn:disabled {
+    background: #cbd5e0;
+    cursor: not-allowed;
+    transform: translate(-50%, -50%);
+    box-shadow: none;
+}
+
+.result-box {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.result-box h2 {
+    margin-bottom: 10px;
+    font-size: 1.5em;
+}
+
+#selectedPlan {
+    font-size: 2em;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.plans-list {
+    background: #f7fafc;
+    padding: 20px;
+    border-radius: 15px;
+}
+
+.plans-list h3 {
+    color: #4a5568;
+    margin-bottom: 15px;
+}
+
+#plansList {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+#plansList li {
+    background: white;
+    color: #4a5568;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#plansList li:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+    }
+    
+    h1 {
+        font-size: 2em;
+    }
+    
+    #selectedPlan {
+        font-size: 1.5em;
+    }
+    
+    .spin-btn {
+        padding: 15px 30px;
+        font-size: 1.2em;
+    }
+    
+    #plansList {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+    </style>
+
+    <script>
+        // Lista de planes para la ruleta
+const plans = [
+    { emoji: "🍽️", text: "Cena romántica" },
+    { emoji: "🎬", text: "Noche de películas" },
+    { emoji: "🧉🥐", text: "Merienda de mates y facturas " },
+    { emoji: "🏃‍♂️", text: "Paseo por el parque" },
+    { emoji: "🎬", text: "Ir al cine" },
+    { emoji: "🍕🍺", text: "Noche de pizza y birra " },
+    { emoji: "🍦", text: "Noche de heladería artesanal " },
+    { emoji: "🃏🍪", text: "Tarde de juegos de mesa y bizcochitos" },
+    { emoji: "🏖️", text: "Picnic en la plaza" },
+    { emoji: "🌧️🥟", text: "Hacer tortas fritas si llueve " },
+    { emoji: "🍮", text: "Hacer algun postre" },
+    { emoji: "🚗🌾", text: "Escapada a un pueblito cercano " }
+    
+];
+
+const canvas = document.getElementById('wheelCanvas');
+const ctx = canvas.getContext('2d');
+const spinButton = document.getElementById('spinButton');
+const selectedPlan = document.getElementById('selectedPlan');
+const plansList = document.getElementById('plansList');
+
+let currentRotation = 0;
+let spinning = false;
+let spinVelocity = 0;
+let spinDecay = 0.98;
+let minSpin = 0.01;
+
+// Colores para los segmentos
+const colors = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
+    '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F',
+    '#BB8FCE', '#85C1E2', '#F1948A', '#7DCEA0'
+];
+
+// Mostrar lista de planes
+plans.forEach(plan => {
+    const li = document.createElement('li');
+    li.innerHTML = `${plan.emoji} ${plan.text}`;
+    plansList.appendChild(li);
+});
+
+function drawWheel(rotation) {
+    const width = canvas.width;
+    const height = canvas.height;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = Math.min(width, height) / 2 - 10;
+    
+    ctx.clearRect(0, 0, width, height);
+    
+    const anglePerSegment = (Math.PI * 2) / plans.length;
+    
+    for (let i = 0; i < plans.length; i++) {
+        const startAngle = i * anglePerSegment + rotation;
+        const endAngle = (i + 1) * anglePerSegment + rotation;
+        
+        // Dibujar segmento
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+        
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Dibujar texto
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + anglePerSegment / 2);
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 16px "Segoe UI", sans-serif';
+        ctx.fillStyle = '#2d3748';
+        ctx.shadowColor = 'white';
+        ctx.shadowBlur = 3;
+        
+        // Mostrar emoji y texto
+        ctx.fillText(plans[i].emoji, radius * 0.7, 0);
+        
+        ctx.font = '12px "Segoe UI", sans-serif';
+        const shortText = plans[i].text.length > 15 ? plans[i].text.substring(0, 12) + '...' : plans[i].text;
+        ctx.fillText(shortText, radius * 0.7, 25);
+        
+        ctx.restore();
+    }
+    
+    // Dibujar círculo central
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
+    ctx.fillStyle = 'white';
+    ctx.fill();
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+    ctx.strokeStyle = '#4a5568';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+}
+
+function getSelectedPlan(rotation) {
+    const anglePerSegment = (Math.PI * 2) / plans.length;
+    // Normalizar el ángulo entre 0 y 2PI
+    let normalizedRotation = rotation % (Math.PI * 2);
+    if (normalizedRotation < 0) normalizedRotation += Math.PI * 2;
+    
+    // Calcular el índice del segmento (ajustado para que el puntero esté arriba)
+    const pointerAngle = Math.PI / 2; // 90 grados (arriba)
+    let segmentIndex = Math.floor(((pointerAngle - normalizedRotation + Math.PI * 2) % (Math.PI * 2)) / anglePerSegment);
+    
+    return plans[segmentIndex % plans.length];
+}
+
+function spin() {
+    if (spinning) return;
+    
+    spinning = true;
+    spinButton.disabled = true;
+    spinVelocity = 30 + Math.random() * 20;
+    selectedPlan.textContent = '🎡 Girando...';
+    
+    function spinAnimation() {
+        if (spinVelocity > minSpin) {
+            currentRotation += spinVelocity * 0.01;
+            spinVelocity *= spinDecay;
+            drawWheel(currentRotation);
+            requestAnimationFrame(spinAnimation);
+        } else {
+            spinning = false;
+            spinButton.disabled = false;
+            
+            const selected = getSelectedPlan(currentRotation);
+            selectedPlan.innerHTML = `${selected.emoji} ${selected.text}`;
+            
+            // Animación de celebración
+            selectedPlan.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                selectedPlan.style.transform = 'scale(1)';
+            }, 200);
+        }
+    }
+    
+    spinAnimation();
+}
+
+function init() {
+    // Ángulo inicial aleatorio
+    currentRotation = Math.random() * Math.PI * 2;
+    drawWheel(currentRotation);
+    
+    // Mostrar un plan aleatorio al inicio
+    const randomPlan = plans[Math.floor(Math.random() * plans.length)];
+    selectedPlan.innerHTML = `${randomPlan.emoji} ${randomPlan.text}`;
+}
+
+// Event listeners
+spinButton.addEventListener('click', spin);
+
+// Inicializar la ruleta
+init();
+
+// Hacer la ruleta responsive
+window.addEventListener('resize', () => {
+    const container = canvas.parentElement;
+    const containerWidth = container.clientWidth;
+    canvas.style.width = '100%';
+    canvas.style.height = 'auto';
+    drawWheel(currentRotation);
+});
+
+
+
+
+    </script>
+</body>
+</html>
